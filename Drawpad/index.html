@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Drawpad</title>
+	<link rel = "icon" href = "drawpad.png"/>
+	<style type="text/css">
+
+		#stripe {
+			height: 40px;
+			background: #C9D3D6;
+		}
+		#colorInput {
+			float: left;
+			margin: 5px;
+		}
+		#resetButton {
+			float: left;
+			width: 50px;
+			margin: 5px;
+			text-align: center;
+			padding: 10px;
+			box-sizing: border-box;
+		}
+		#numberInput {
+			float: right;
+			margin: 5px;
+		}
+		#BrushWeightText {
+			float: right;
+			margin: 5px 1px 5px 5px;
+		}
+		.btn {
+			border: 1px solid steelblue;
+			padding: 5px;
+			text-align: center;
+			float: right;
+			margin: 5px;
+			background: steelblue;
+			text-decoration: none;
+			color: white;
+			box-shadow: 3px solid rgba(0,0,0,0.3);
+		}
+		#file {
+			float: left;
+			margin: 5px;
+		}
+		#ImageUploadText {
+			float: left;
+			margin: 5px 5px 5px -35px;
+		}
+
+		#myCanvas {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 50%;
+			height: 50%;
+			border: 3px solid black;
+			background: white;
+			
+		}
+		body {
+			margin: 0;
+			padding: 0;
+			/*background: #4b6cb7; 
+			background: -webkit-linear-gradient(to left, #4b6cb7 , #182848);  Chrome 10-25, Safari 5.1-6 
+			background: linear-gradient(to left, #4b6cb7 , #182848); */
+        	background: #404242;
+		}
+
+		header {
+			text-align: center;
+			background: steelblue;
+			height: 25%;
+			padding: 0;
+			color: white;
+			
+		}
+		h1 {
+			margin: 0;
+		}
+		h3 {
+			margin: 5px 0 0 0;
+		}
+
+	</style>
+</head>
+<body>
+
+<!-- <input id = "colorInput" type = "color"></input>
+ -->
+
+<header>
+<h1>The Great Drawing Pad</h1>
+<h3>Who needs a peice of paper when you got me?</h3>
+<div id = "stripe">
+
+<input id = "colorInput" type = "color"/>
+
+<button id = "resetButton">Reset</button>
+
+<input type = "number" id ="numberInput"><span id = "BrushWeightText">Brush Width</span></input>
+
+<a href = "#" class = "btn">Download</a>
+
+<input type = "file" id = "file"><span id = "ImageUploadText">Edit an Image</span></input>
+
+</div>
+</header>
+
+
+<canvas id = "myCanvas">
+</canvas>
+</body>
+<script type = "text/javascript" src = "jquery.js"></script>
+<script type = "text/javascript" src = "paper.js"></script>
+<script type = "text/paperscript" canvas = "myCanvas">
+var input = document.getElementById("colorInput");
+var myPath;
+var brushWeight = "20";
+$("#numberInput").attr("value", brushWeight);
+var myColor = "#eeFFee";
+var resetButton = $("#resetButton");
+var canvas = $("#myCanvas")[0];
+ input.addEventListener("change", function() {
+ 	myColor = this.value;
+ });
+ var clearCanvas = false;
+var ctx = canvas.getContext('2d');
+resetButton.click(function() {
+		clearCanvas = true;
+});
+ctx.beginPath();
+ctx.moveTo(0,0);
+ctx.closePath();
+var button = $(".btn");
+button.on('click', function (e) {
+    var dataURL = canvas.toDataURL('image/png');
+    button.attr("href", dataURL);
+});
+
+$("#file").change(function(data) {
+	handleImage(data);
+});
+$("#numberInput").change(function() {
+	var value = $(this).attr("value");
+	if(value > 0) {
+	brushWeight = value;
+	} else {
+	$(this).attr("value", "20");
+	console.log("Could not asign negative number to brushWeight!");
+	}	
+	console.log(value);
+
+});
+
+function onFrame(event){
+    if(clearCanvas && project.activeLayer.hasChildren()){
+    	ctx.clearRect(0,0, canvas.width, canvas.height);
+        project.activeLayer.remove();
+        clearCanvas = false;
+    }
+}
+
+function handleImage(e){
+    var reader = new FileReader();
+    reader.onload = function(event){
+        var img = new Image();
+        img.onload = function(){
+            canvas.width = img.width;
+            canvas.height = img.height;
+            var r = new Raster(img.src, new paper.Point(0,0));
+            console.log("Image drawn!");
+            project.activeLayer.setPosition(paperjs.project.view.center);
+            clickX = [];
+			clickY = [];
+			clickDrag = [];
+        }
+        img.src = event.target.result;
+    }
+    reader.readAsDataURL(e.target.files[0]);     
+}
+function onMouseDown() {
+	myPath = new Path();
+	myPath.strokeColor = myColor;
+	myPath.strokeWidth = brushWeight;
+	myPath.smooth();
+}
+
+function onMouseDrag(event) {
+	myPath.add(event.point);
+	myPath.smooth();
+}
+window.onresize = function() {
+$("#myCanvas").width = window.width * 0.5;
+$("#myCanvas").height = window.height * 0.5;
+$("#myCanvas").css("margin-top", "10px");
+
+
+}
+
+</script>
+</html>
